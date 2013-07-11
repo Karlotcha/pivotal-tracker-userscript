@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PT - timers for stories to test and to finish
-// @version      0.1
+// @version      0.2
 // @description  help PMs and devs to manage their stories
 // @match        https://www.pivotaltracker.com/s/projects/*
 // @author       Karlotcha Hoa
@@ -19,51 +19,65 @@ function Story(id, $this){
                     id +
                     '/history?envelope=true'
 
-  $.get(pt_api_url, function(d){
-    that.data = d.data
+  this.delivered_at = $this.data('delivered_at')
+  this.started_at   = $this.data('started_at')
 
-    if ($this.hasClass('delivered')) {
+  if ($this.hasClass('delivered') && !$this.data('.delivered_at')) {
+    $.get(pt_api_url, function(d){
       for (var i = 0, l=d.data.length; i<l ;i++) {
         if (d.data[i].action.highlight == "delivered") {
-          that.updated_at   = d.data[i].action.occurred_at
+          that.delivered_at = d.data[i].action.occurred_at
           break
         }
       }
-    }
-    else if ($this.hasClass('started')) {
+      that.display($this)
+    })
+  }
+  else if ($this.hasClass('started') && !$this.data('.started_at')) {
+    $.get(pt_api_url, function(d){
       for (var i = 0, l=d.data.length; i<l ;i++) {
         if (d.data[i].action.highlight == "started") {
-          that.updated_at   = d.data[i].action.occurred_at
+          that.started_at = d.data[i].action.occurred_at
           break
         }
       }
-    }
+      that.display($this)
+    })
+  }
+}
 
-    that.timer  = new Date().getTime() - that.updated_at
-    $this.data('timer', that.timer)
+Story.prototype.display = function ($this) {
+  $this.data('delivered_at', this.delivered_at)
+  $this.data('started_at', this.started_at)
+  this.timer_create  = new Date().getTime() - this.delivered_at
+  this.timer_start   = new Date().getTime() - this.started_at
 
-    var $timer   = $('<div class="timer"></div>')
-      , delta    = that.timer / 1000
-      , days     = Math.floor(delta / 86400)
-      , hours    = Math.floor(delta / 3600)
-      , minutes  = Math.floor(delta / 60)
+  if ($this.hasClass('delivered'))
+    var $timer   = $('<div class="timer timer-deliver"></div>')
+      , delta    = this.timer_create / 1000
+  else if ($this.hasClass('started'))
+    var $timer   = $('<div class="timer timer-start"></div>')
+      , delta    = this.timer_start / 1000
 
-    if ( days > 1 )
-      $timer.addClass('omg-not-ok')
-            .append( days + ' days' )
-    else if ( days == 1 )
-      $timer.addClass('still-ok')
-            .append( hours + ' hours' )
-    else if ( hours > 0 )
-      $timer.addClass('ok')
-            .append( hours + ' hours' )
-    else
-      $timer.addClass('ok')
-            .append( minutes + ' minutes')
+  var days     = Math.floor(delta / 86400)
+    , hours    = Math.floor(delta / 3600)
+    , minutes  = Math.floor(delta / 60)
 
-    $this.find('.timer').remove()
-    $this.append($timer)
-  })
+  if ( days > 1 )
+    $timer.addClass('omg-not-ok')
+          .append( days + ' days' )
+  else if ( days == 1 )
+    $timer.addClass('still-ok')
+          .append( hours + ' hours' )
+  else if ( hours > 0 )
+    $timer.addClass('ok')
+          .append( hours + ' hours' )
+  else
+    $timer.addClass('ok')
+          .append( minutes + ' minutes' )
+
+  $this.find('.timer').remove()
+  $this.append($timer)
 }
 
 // **************************************************************************
@@ -95,5 +109,5 @@ $style.attr('type', 'text/css')
       .append('.story      { position: relative; }')
       .append('.delivered .preview { min-height: 38px; }')
       .append('.started .preview { min-height: 38px; }')
-      .append('.timer      { position: absolute; top: 24px; left: 4px; font-size: 12px;}')
+      .append('.timer { position: absolute; top: 24px; left: 4px; font-size: 12px;}')
 $('head').append($style)
