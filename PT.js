@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PT - timers for stories to test and to finish
-// @version      0.2
+// @version      0.3
 // @description  help PMs and devs to manage their stories
 // @match        https://www.pivotaltracker.com/s/projects/*
 // @author       Karlotcha Hoa
