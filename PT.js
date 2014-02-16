@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PT - timers for stories to test and to finish
-// @version      0.3
+// @version      0.4
 // @description  help PMs and devs to manage their stories
 // @match        https://www.pivotaltracker.com/s/projects/*
 // @author       Karlotcha Hoa
@@ -17,7 +17,7 @@ function Story(id, $this){
                     project_id +
                     '/stories/' +
                     id +
-                    '/history?envelope=true'
+                    '/activity?date_format=millis&envelope=true'
 
   this.delivered_at = $this.data('delivered_at')
   this.started_at   = $this.data('started_at')
@@ -25,8 +25,8 @@ function Story(id, $this){
   if ($this.hasClass('delivered') && !$this.data('.delivered_at')) {
     $.get(pt_api_url, function(d){
       for (var i = 0, l=d.data.length; i<l ;i++) {
-        if (d.data[i].action.highlight == "delivered") {
-          that.delivered_at = d.data[i].action.occurred_at
+        if (d.data[i].highlight == "delivered") {
+          that.delivered_at = d.data[i].occurred_at
           break
         }
       }
@@ -36,8 +36,8 @@ function Story(id, $this){
   else if ($this.hasClass('started') && !$this.data('.started_at')) {
     $.get(pt_api_url, function(d){
       for (var i = 0, l=d.data.length; i<l ;i++) {
-        if (d.data[i].action.highlight == "started") {
-          that.started_at = d.data[i].action.occurred_at
+        if (d.data[i].highlight == "started") {
+          that.started_at = d.data[i].occurred_at
           break
         }
       }
